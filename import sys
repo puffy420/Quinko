@@ -1,0 +1,111 @@
+import sys
+sys.path.append('/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/site-packages')
+import pygame
+import random
+
+pygame.init()
+
+# set up pygame
+pygame.init()
+
+# set up the screen
+screen_width = 800
+screen_height = 600
+screen = pygame.display.set_mode((screen_width, screen_height))
+pygame.display.set_caption("Quinko")
+
+# set up colors
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+GRAY = (128, 128, 128)
+RED = (255, 0, 0)
+BLUE = (0, 0, 255)
+GREEN = (0, 255, 0)
+
+# set up variables
+ball_radius = 10
+ball_color = WHITE
+balls = []
+for i in range(10):
+    ball_x = random.randint(ball_radius, screen_width - ball_radius)
+    ball_y = random.randint(0, screen_height // 2)
+    ball_speed = 0
+    balls.append({'x': ball_x, 'y': ball_y, 'speed_x': 0, 'speed_y': 0})
+gravity = 0.02
+
+post_radius = 5
+post_color = GRAY
+num_posts = 50
+
+posts = []
+for i in range(num_posts):
+    post_x = random.randint(post_radius, screen_width - post_radius)
+    post_y = random.randint(post_radius, screen_height // 2 - 25 - post_radius)
+    posts.append({'x': post_x, 'y': post_y})
+
+# set up the shoot area
+rect_width = screen_width // 4
+rect_height = 25
+rect1 = pygame.Rect(0, screen_height - rect_height, rect_width, rect_height)
+rect2 = pygame.Rect(rect_width, screen_height - rect_height, rect_width, rect_height)
+rect3 = pygame.Rect(rect_width * 2, screen_height - rect_height, rect_width, rect_height)
+rect4 = pygame.Rect(rect_width * 3, screen_height - rect_height, rect_width, rect_height)
+
+#
+# set up the game loop
+#
+running = True
+while running:
+    # handle events
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                balls[0]['speed_y'] = -5
+
+    # fill the screen with gray
+    screen.fill(GRAY)
+
+    # draw the rectangles
+    pygame.draw.rect(screen, BLUE, rect1)
+    pygame.draw.rect(screen, BLUE, rect2)
+    pygame.draw.rect(screen, BLUE, rect3)
+    pygame.draw.rect(screen, BLUE, rect4)
+
+    # update the balls' positions
+    for i, ball in enumerate(balls):
+        ball['y'] += ball['speed_y']
+        ball['speed_y'] += gravity
+        ball['x'] += ball['speed_x']
+        if ball['y'] > screen_height - ball_radius:
+            balls.pop(i)
+        elif ball['x'] < ball_radius or ball['x'] > screen_width - ball_radius:
+            ball['speed_x'] *= -1
+        for post in posts:
+            dist = ((ball['x'] - post['x']) ** 2 + (ball['y'] - post['y']) ** 2) ** 0.5
+            if dist < ball_radius + post_radius:
+                ball['speed_y'] *= -1
+                ball['speed_x'] += random.uniform(-0.5, 0.5)
+        for j, other_ball in enumerate(balls):
+            if i != j:
+                dist = ((ball['x'] - other_ball['x']) ** 2 + (ball['y'] - other_ball['y']) ** 2) ** 0.5
+                if dist < 2 * ball_radius:
+                    ball['speed_y'] *= -1
+                    ball['speed_x'] += random.uniform(-0.5, 0.5)
+                    other_ball['speed_y'] *= -1
+                    other_ball['speed_x'] += random.uniform(-0.1, 0.1)
+
+    # draw the balls
+    for ball in balls:
+        pygame.draw.circle(screen, ball_color, (int(ball['x']), int(ball['y'])), ball_radius)
+
+    # draw the posts
+    for post in posts:
+        pygame.draw.circle(screen, post_color, (post['x'], post['y']), post_radius)
+
+    # update the screen
+    pygame.display.update()
+
+# quit pygame
+pygame.quit()
